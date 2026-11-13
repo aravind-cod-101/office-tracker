@@ -2,9 +2,19 @@
   "name": "Office Hours",
   "short_name": "Office Hours",
   "description": "A private, offline-first office hours tracker.",
-  "start_url": "./index.html",
+  "start_url": ".",
+  "scope": ".",
   "display": "standalone",
   "background_color": "#0b1220",
   "theme_color": "#101827",
-  "icons": []
+  "lang": "en",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }
