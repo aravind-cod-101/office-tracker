@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Office Hours app icon">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#17263b"/>
+      <stop offset="100%" stop-color="#0b1220"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#35c98a"/>
+      <stop offset="100%" stop-color="#8be0b9"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <circle cx="256" cy="256" r="150" fill="none" stroke="url(#ring)" stroke-width="28" opacity="0.9"/>
+  <path d="M256 126v130l90 62" fill="none" stroke="#f4f7fb" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <circle cx="256" cy="256" r="18" fill="#f4f7fb"/>
+  <path d="M128 134c30-50 88-80 164-80 34 0 67 7 97 19" fill="none" stroke="#83b7ff" stroke-width="18" stroke-linecap="round" opacity="0.9"/>
+  <path d="M168 394c27 28 63 45 108 45 59 0 108-29 142-77" fill="none" stroke="#ff6b72" stroke-width="16" stroke-linecap="round" opacity="0.8"/>
+</svg>
