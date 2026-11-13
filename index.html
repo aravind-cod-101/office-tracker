@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101827">
+<meta name="description" content="A private, offline-first office hours tracker.">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Office Hours</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#121d2e;--muted:#91a0b5;--text:#f4f7fb;--line:#25344a;--green:#35c98a;--red:#ff6b72;--blue:#83b7ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#18283e 0,#0b1220 55%);color:var(--text);font:16px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+main{width:min(100% - 32px,520px);margin:0 auto;padding:32px 0 48px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:26px}
+.brand{font-weight:750;font-size:19px;letter-spacing:-.4px}.private{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:6px 10px}
+.date{color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:1.3px}
+.panel{background:rgba(18,29,46,.92);border:1px solid var(--line);border-radius:22px;padding:23px;margin:14px 0;box-shadow:0 18px 55px #0003}
+.total{font-size:clamp(48px,13vw,68px);font-weight:750;letter-spacing:-3px;line-height:1.1;margin:10px 0 4px;font-variant-numeric:tabular-nums}
+.sub{color:var(--muted);font-size:13px}.progress{height:9px;background:#27364a;border-radius:99px;overflow:hidden;margin:19px 0 9px}.fill{height:100%;width:0;background:linear-gradient(90deg,#35c98a,#8be0b9);border-radius:99px;transition:width .25s}
+.row{display:flex;justify-content:space-between;gap:12px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:19px}.stat{background:#0d1726;border:1px solid var(--line);border-radius:15px;padding:14px}.stat small{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}.stat strong{font-size:18px;font-variant-numeric:tabular-nums}
+.status{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--green);font-weight:700;letter-spacing:.7px}.dot{height:7px;width:7px;border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor}
+button{font:inherit;cursor:pointer;border:0}.toggle{width:100%;height:66px;border-radius:16px;margin-top:20px;background:var(--green);color:#062217;font-size:19px;font-weight:800;letter-spacing:.4px;display:flex;align-items:center;justify-content:center;gap:11px;transition:transform .12s,filter .12s}.toggle:active{transform:scale(.985)}.toggle.stop{background:var(--red);color:#2b090c}.toggle:disabled{opacity:.5;cursor:not-allowed}
+.section-title{font-size:16px;font-weight:700;margin:0 0 13px}.session{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--line);font-size:14px}.session span:last-child{font-variant-numeric:tabular-nums;color:#d9e4f2;text-align:right}.empty{color:var(--muted);font-size:14px;padding:7px 0}
+.settings{display:flex;align-items:center;justify-content:space-between;gap:12px}.settings label{font-size:14px}.target-input{width:105px;background:#0b1524;border:1px solid var(--line);border-radius:10px;padding:10px;color:var(--text);font:inherit;text-align:right}
+.manual-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.manual-grid label{font-size:12px;color:var(--muted)}.manual-grid label:first-child{grid-column:1/-1}.manual-grid input{display:block;width:100%;margin-top:6px;background:#0b1524;border:1px solid var(--line);border-radius:10px;padding:11px;color:var(--text);font:inherit;color-scheme:dark}.manual-add{width:100%;margin-top:13px;padding:12px;border-radius:11px;background:#263b54;color:var(--text);font-weight:700}.session-actions{display:flex;align-items:center;gap:9px}.remove-session{background:transparent;color:#ff9297;border:1px solid #694047;border-radius:8px;padding:5px 8px;font-size:12px}
+.hint{font-size:12px;color:var(--muted);margin-top:9px}
+footer{text-align:center;color:#728198;font-size:12px;margin-top:22px}
+@media(min-width:560px){main{padding-top:45px}}
+</style>
+</head>
+<body>
+<main>
+<header><div class="brand">◷ Office Hours</div><div class="private">● Saved on this device</div></header>
+<div class="date" id="dateLabel"></div>
+<section class="panel">
+  <div class="row"><span class="sub">TOTAL TODAY</span><span class="status" id="status"><i class="dot"></i> READY</span></div>
+  <div class="total" id="total">00:00:00</div>
+  <div class="sub" id="targetCaption">of 6h 30m target</div>
+  <div class="progress"><div class="fill" id="progress"></div></div>
+  <div class="row sub"><span id="doneLabel">0% completed</span><span id="remainingLabel">6h 30m left</span></div>
+  <div class="stats">
+    <div class="stat"><small>Current session</small><strong id="current">00:00:00</strong></div>
+    <div class="stat"><small>Expected finish</small><strong id="finish">—</strong></div>
+    <div class="stat"><small>Office presence</small><strong id="presence">00:00:00</strong></div>
+    <div class="stat"><small>Break time</small><strong id="breaks">00:00:00</strong></div>
+  </div>
+  <div class="hint" id="presenceHint">First login and last logout will be recorded automatically.</div>
+  <div class="hint" id="thresholdHint"></div>
+  <button class="toggle" id="toggle" type="button"><span id="buttonIcon">▶</span><span id="buttonText">START</span></button>
+</section>
+<section class="panel">
+  <h2 class="section-title">Today's sessions</h2>
+  <div class="row sub" style="margin-bottom:10px"><span>First login: <strong id="firstLogin">—</strong></span><span>Last logout: <strong id="lastLogout">—</strong></span></div>
+  <div id="sessions" class="empty">No sessions yet. Tap START when you begin.</div>
+</section>
+<section class="panel">
+  <h2 class="section-title">Add past work session</h2>
+  <div class="hint" style="margin:0 0 13px">Enter each period you actively worked today. Add separate entries around breaks.</div>
+  <div class="manual-grid">
+    <label>Date<input id="manualDate" type="date"></label>
+    <label>Started at<input id="manualStart" type="time"></label>
+    <label>Ended at<input id="manualEnd" type="time"></label>
+  </div>
+  <button class="manual-add" id="addManual" type="button">＋ Add session</button>
+  <div class="hint" id="manualMessage" aria-live="polite"></div>
+</section>
+<section class="panel">
+  <div class="settings">
+    <label for="target">Daily target (hours)</label>
+    <input class="target-input" id="target" type="number" min="0.25" max="24" step="0.25" value="6.5">
+  </div>
+  <div class="hint">Your target is saved on this device. Change it anytime.</div>
+</section>
+<section class="panel">
+  <h2 class="section-title">Recent days</h2>
+  <div id="history" class="empty">Your daily totals will appear here.</div>
+</section>
+<footer>Offline-first · No account · No server · Your data stays in this browser</footer>
+</main>
+<script>
+(() => {
+ const KEY='office-hours-tracker-v1';
+ const $=id=>document.getElementById(id);
+ const pad=n=>String(n).padStart(2,'0');
+ const dayKey=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+ const midnight=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+1,0,0,0,0).getTime();
+ const fmt=s=>{s=Math.max(0,Math.floor(s));return `${pad(Math.floor(s/3600))}:${pad(Math.floor(s%3600/60))}:${pad(s%60)}`};
+ const human=s=>{let m=Math.floor(s/60),h=Math.floor(m/60);m%=60;return h?`${h}h ${m}m`:`${m}m`};
+ const clock=ts=>new Date(ts).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+ const dateText=d=>d.toLocaleDateString([], {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+ const dateInputValue=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+ let state=load();
+ function fresh(){return {target:6.5,days:{},active:null}}
+ function load(){try{return {...fresh(),...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch{return fresh()}}
+ function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+ function day(k){return state.days[k]||(state.days[k]={sessions:[]})}
+ function closeAt(ts){
+   if(!state.active)return;
+   const a=state.active, end=Math.max(a.start,ts);
+   day(a.day).sessions.push({start:a.start,end});
+   state.active=null;save();
+ }
+ function recover(){
+   if(state.active){
+     const now=Date.now(), activeDay=state.active.day;
+     const startDay=new Date(state.active.start);
+     if(dayKey(new Date())!==activeDay){
+       closeAt(midnight(startDay)-1);
+     }
+   }
+ }
+ function sessionsFor(k){
+   const d=state.days[k];
+   const list=d?(d.sessions||[]).slice():[];
+   if(state.active&&state.active.day===k)list.push({start:state.active.start,end:Date.now(),live:true});
+   return list;
+ }
+ function totals(k){
+   return sessionsFor(k).reduce((sum,s)=>sum+Math.max(0,((s.end??Date.now())-s.start)/1000),0);
+ }
+ function presenceFor(k){
+   const list=sessionsFor(k);
+   if(!list.length)return {seconds:0,first:null,last:null};
+   const first=Math.min(...list.map(s=>s.start));
+   const last=Math.max(...list.map(s=>s.end??Date.now()));
+   return {seconds:Math.max(0,(last-first)/1000),first,last};
+ }
+ function render(){
+   recover();
+   const now=new Date(),k=dayKey(now),target=Number(state.target)||6.5,targetSec=target*3600;
+   const total=totals(k),active=!!state.active&&state.active.day===k;
+   $('dateLabel').textContent=dateText(now);
+   $('total').textContent=fmt(total);
+   $('targetCaption').textContent=`of ${human(targetSec)} target`;
+   const pct=Math.min(100,total/targetSec*100);
+   $('progress').style.width=pct+'%';
+   $('doneLabel').textContent=Math.floor(pct)+'% completed';
+   $('remainingLabel').textContent=human(Math.max(0,targetSec-total))+' left';
+   $('current').textContent=active?fmt((Date.now()-state.active.start)/1000):'00:00:00';
+   $('finish').textContent=active?clock(Date.now()+Math.max(0,targetSec-total)*1000):'—';
+   const presence=presenceFor(k), breakSeconds=Math.max(0,presence.seconds-total);
+   $('presence').textContent=fmt(presence.seconds);
+   $('breaks').textContent=fmt(breakSeconds);
+   $('firstLogin').textContent=presence.first?clock(presence.first):'—';
+   $('lastLogout').textContent=(!active&&presence.last)?clock(presence.last):'—';
+   $('presenceHint').textContent=presence.first
+     ? `Office span: ${clock(presence.first)}${active?' · still in office':` – ${clock(presence.last)}`}`
+     : 'First login and last logout will be recorded automatically.';
+   const required=9*3600;
+   const met=presence.seconds>=required;
+   $('thresholdHint').textContent=met
+     ? `9-hour office presence check: ${presence.seconds===required?'Requirement met':`Requirement met · ${human(presence.seconds-required)} beyond required`}.`
+     : `9-hour office presence check: ${human(required-presence.seconds)} remaining.`;
+   $('thresholdHint').style.color='var(--muted)';
+   $('status').innerHTML=active?'<i class="dot"></i> TRACKING':'<i class="dot"></i> READY';
+   $('status').style.color=active?'var(--green)':'var(--muted)';
+   $('toggle').classList.toggle('stop',active);
+   $('buttonIcon').textContent=active?'■':'▶';
+   $('buttonText').textContent=active?'STOP':'START';
+   $('target').value=state.target;
+   const sessions=(state.days[k]?.sessions||[]).slice();
+   if(active)sessions.push({start:state.active.start,end:Date.now(),live:true});
+   $('sessions').innerHTML=sessions.length?sessions.map((s,i)=>`<div class="session"><span>${clock(s.start)}${s.live?' · In progress':s.manual?' · Manual':''}</span><span class="session-actions">${s.live?fmt((Date.now()-s.start)/1000):`${clock(s.end)} · ${human((s.end-s.start)/1000)}`}${s.manual?`<button class="remove-session" data-remove="${i}" type="button">Remove</button>`:''}</span></div>`).join(''):'<div class="empty">No sessions yet. Tap START when you begin.</div>';
+   const hist=Object.keys(state.days).filter(x=>x!==k).sort().reverse().slice(0,7);
+   $('history').innerHTML=hist.length?hist.map(x=>{
+     const pr=presenceFor(x);
+     return `<div class="session"><span>${new Date(x+'T12:00:00').toLocaleDateString([], {weekday:'short',day:'numeric',month:'short'})}<br><small style="color:var(--muted)">Presence ${pr.first?clock(pr.first)+' – '+clock(pr.last):'—'}</small></span><span>${human(totals(x))}<br><small style="color:var(--muted)">${human(pr.seconds)} presence · ${pr.seconds>=9*3600?'Requirement met':'Below 9h'}</small></span></div>`;
+   }).join(''):'<div class="empty">Your previous daily totals will appear here.</div>';
+ }
+ $('toggle').addEventListener('click',()=>{
+   const now=Date.now(),k=dayKey(new Date());
+   recover();
+   if(state.active){closeAt(Math.min(now,midnight(new Date(state.active.start))-1));}
+   else{state.active={start:now,day:k};day(k);save();}
+   render();
+ });
+ // Manual backfill: each entry is one active-work interval; gaps are treated as breaks.
+ $('manualDate').value=dateInputValue(new Date());
+ $('manualStart').value='09:00';
+ $('manualEnd').value='';
+ $('addManual').addEventListener('click',()=>{
+   const date=$('manualDate').value,startText=$('manualStart').value,endText=$('manualEnd').value;
+   const msg=$('manualMessage');
+   if(!date||!startText||!endText){msg.textContent='Choose a date, start time and end time.';return;}
+   const start=new Date(`${date}T${startText}`).getTime();
+   const end=new Date(`${date}T${endText}`).getTime();
+   if(!Number.isFinite(start)||!Number.isFinite(end)||end<=start){msg.textContent='End time must be later than start time on the same day.';return;}
+   const k=date, existing=(state.days[k]?.sessions||[]).slice();
+   if(state.active&&state.active.day===k)existing.push({start:state.active.start,end:Date.now()});
+   if(existing.some(x=>start<x.end&&end>x.start)){msg.textContent='This entry overlaps an existing work session. Adjust the times and try again.';return;}
+   day(k).sessions.push({start,end,manual:true});
+   day(k).sessions.sort((a,b)=>a.start-b.start);
+   save();msg.textContent='Manual work session added.';
+   if(k===dayKey(new Date()))render();
+ });
+ $('sessions').addEventListener('click',e=>{
+   const btn=e.target.closest('[data-remove]');
+   if(!btn)return;
+   const visibleIndex=Number(btn.dataset.remove), k=dayKey(new Date());
+   const list=state.days[k]?.sessions||[];
+   const displayed=list.slice().sort((a,b)=>a.start-b.start);
+   const item=displayed[visibleIndex];
+   if(!item||!item.manual)return;
+   state.days[k].sessions= list.filter(x=>x!==item);
+   save();render();
+ });
+ $('target').addEventListener('change',e=>{
+   const v=Number(e.target.value);
+   if(Number.isFinite(v)&&v>=.25&&v<=24){state.target=v;save();}
+   else e.target.value=state.target;
+   render();
+ });
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)render()});
+ window.addEventListener('focus',render);
+ render();setInterval(render,1000);
+ if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
